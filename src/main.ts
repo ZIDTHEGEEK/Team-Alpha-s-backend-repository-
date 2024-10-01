@@ -1,11 +1,11 @@
 import * as dotenv from 'dotenv';
 
-import { HttpAdapterHost, NestFactory } from '@nestjs/core';
+import { NestFactory } from '@nestjs/core';
 import 'dotenv/config';
+import { PORT } from './config';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import loggerInstance from './middlewares/logger';
-import { HttpExceptionFilter } from './middlewares/exception.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
@@ -21,10 +21,6 @@ async function bootstrap() {
 
   dotenv.config({ path: '.env' });
 
-  const httpAdapter = app.get(HttpAdapterHost);
-
-  app.useGlobalFilters(new HttpExceptionFilter(httpAdapter));
-
-  await app.listen(3000);
+  await app.listen(PORT ?? 4000);
 }
 bootstrap();

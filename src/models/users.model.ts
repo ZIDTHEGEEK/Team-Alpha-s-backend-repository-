@@ -9,7 +9,7 @@ export class Users {
   _id: string;
 
   @Prop()
-  fullName: string;
+  fullname: string;
 
   @Prop()
   email: string;
@@ -18,7 +18,22 @@ export class Users {
   username: string;
 
   @Prop()
+  userSalt: string;
+
+  @Prop({ required: false })
   phone: string;
+
+  @Prop()
+  publicKey: string;
+
+  @Prop()
+  walletAddress: string;
+
+  @Prop()
+  nonce: string;
+
+  @Prop()
+  password: string;
 }
 
 export const UserModel = SchemaFactory.createForClass(Users);
