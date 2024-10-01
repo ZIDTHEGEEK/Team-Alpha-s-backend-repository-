@@ -1,10 +1,20 @@
 import { Module } from '@nestjs/common';
+import { MONGO_DB_URL } from './config';
+import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
-import { AppService } from './app.service';
+import { MongooseModule } from '@nestjs/mongoose';
+import { AuthModule } from './api/auth/auth.module';
+import { UserModule } from './api/users/users.module';
 
 @Module({
-  imports: [],
+  imports: [
+    ConfigModule.forRoot(),
+    MongooseModule.forRoot(MONGO_DB_URL, {
+      dbName: 'sui-dems-db',
+    }),
+    AuthModule,
+    UserModule,
+  ],
   controllers: [AppController],
-  providers: [AppService],
 })
 export class AppModule {}
