@@ -47,7 +47,7 @@ export class AuthService {
     };
 
     const user = await this.userModel.create(createUserData);
-    const token = await this.signUser(user, nonce);
+    const token = await this.signForJwtAddress(user, nonce);
 
     const zkLoginUserAddress = jwtToAddress(token, userSalt);
 
@@ -79,13 +79,13 @@ export class AuthService {
       throw new ConflictException('Invalid password');
     }
 
-    const token = await this.signUser(user, user.nonce);
+    const token = await this.signForLogin(user);
     const { fullname, username, walletAddress, phone } = user;
 
     return { token, user: { email, fullname, username, walletAddress, phone } };
   }
 
-  async signUser(user: Users, nonce: string): Promise<string> {
+  async signForJwtAddress(user: Users, nonce: string): Promise<string> {
     const payload = {
       nonce,
       sub: user._id,
@@ -93,8 +93,21 @@ export class AuthService {
       aud: 'http://localhost:4000',
       // issued at
       iat: Math.floor(Date.now() / 1000),
-      // 1 day
-      exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24,
+      jti: crypto.randomBytes(16).toString('hex'),
+    };
+
+    return this.jwtService.signAsync(payload, {
+      algorithm: 'HS256',
+      secret: JWT_SECRET,
+    });
+  }
+
+  async signForLogin(user: Users): Promise<string> {
+    const payload = {
+      id: user._id,
+      email: user.email,
+      walletAddress: user.walletAddress,
+      iat: Math.floor(Date.now() / 1000),
       jti: crypto.randomBytes(16).toString('hex'),
     };
 
