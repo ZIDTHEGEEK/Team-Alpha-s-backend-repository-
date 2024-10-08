@@ -1,4 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Role } from 'src/constants/metadata';
 
 export type UserDocument = Users & Document;
 
@@ -8,31 +9,25 @@ export type UserDocument = Users & Document;
 export class Users {
   _id: string;
 
-  @Prop()
+  @Prop({ required: false })
   fullname: string;
 
-  @Prop()
+  @Prop({ required: false })
   email: string;
 
-  @Prop()
+  @Prop({ required: false })
   username: string;
-
-  @Prop()
-  userSalt: string;
 
   @Prop({ required: false })
   phone: string;
 
-  @Prop()
-  publicKey: string;
-
-  @Prop()
+  @Prop({ required: false })
   walletAddress: string;
 
-  @Prop()
-  nonce: string;
+  @Prop({ default: Role.STANDARD, enum: Role })
+  role: Role;
 
-  @Prop()
+  @Prop({ required: false })
   password: string;
 }
 
