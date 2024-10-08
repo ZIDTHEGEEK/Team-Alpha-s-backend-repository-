@@ -16,9 +16,6 @@ export class CreateUserDto {
   phone: string;
 
   @IsString()
-  publicKey: string;
-
-  @IsString()
   nonce: string;
 
   @IsString()

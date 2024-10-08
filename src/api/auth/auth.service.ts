@@ -4,11 +4,15 @@ import * as bcrypt from 'bcryptjs';
 import { JWT_SECRET } from 'src/config';
 import { JwtService } from '@nestjs/jwt';
 import { InjectModel } from '@nestjs/mongoose';
-import { CreateUserDto } from './dtos/CreateUserDto';
-import { UserDocument, Users } from 'src/models/users.model';
-import { ConflictException, Injectable } from '@nestjs/common';
 import { jwtToAddress } from '@mysten/zklogin';
 import { LoginUserDto } from './dtos/LoginUserDto';
+import { CreateUserDto } from './dtos/CreateUserDto';
+import { UserDocument, Users } from 'src/models/users.model';
+import {
+  Injectable,
+  ConflictException,
+  NotFoundException,
+} from '@nestjs/common';
 
 @Injectable()
 export class AuthService {
@@ -24,8 +28,7 @@ export class AuthService {
   }
 
   async createUser(createUserDto: CreateUserDto) {
-    const { email, password, fullname, username, phone, publicKey, nonce } =
-      createUserDto;
+    const { email, password, fullname, username, phone, nonce } = createUserDto;
 
     if (await this.userModel.findOne({ email })) {
       throw new ConflictException('You already have an account');
@@ -36,11 +39,8 @@ export class AuthService {
 
     const createUserData = {
       email,
-      nonce,
       fullname,
       username,
-      userSalt,
-      publicKey,
       walletAddress: '',
       password: hashedPassword,
       phone: phone ? phone : '',
@@ -70,7 +70,7 @@ export class AuthService {
     });
 
     if (!user) {
-      throw new ConflictException('User not found');
+      throw new NotFoundException('User not found');
     }
 
     const isValidPassword = await bcrypt.compare(password, user.password);
@@ -83,6 +83,32 @@ export class AuthService {
     const { fullname, username, walletAddress, phone } = user;
 
     return { token, user: { email, fullname, username, walletAddress, phone } };
+  }
+
+  async connectWalletAuthenticate(walletAddress: string) {
+    const walletExists = await this.userModel
+      .findOne({ walletAddress })
+      .select('email fullname username phone');
+
+    if (!walletExists) {
+      const user = await this.userModel.create({
+        fullname: '',
+        email: '',
+        username: '',
+        phone: '',
+        walletAddress,
+        password: '',
+      });
+
+      const token = await this.signForLogin(user);
+      return { token, user: null };
+    }
+
+    const token = await this.signForLogin(walletExists);
+    return {
+      token,
+      user: walletExists.email.length !== 0 ? { ...walletExists } : null,
+    };
   }
 
   async signForJwtAddress(user: Users, nonce: string): Promise<string> {

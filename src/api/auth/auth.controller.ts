@@ -22,4 +22,14 @@ export class AuthController {
     const token = await this.authService.login(loginUserDto);
     return token;
   }
+
+  @Post('connect-wallet')
+  @HttpCode(200)
+  async connectWalletAuthenticate(
+    @Body() { walletAddress }: { walletAddress: string },
+  ): Promise<{ token: string }> {
+    const token =
+      await this.authService.connectWalletAuthenticate(walletAddress);
+    return token;
+  }
 }
