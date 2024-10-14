@@ -4,7 +4,6 @@ import * as bcrypt from 'bcryptjs';
 import { JWT_SECRET } from 'src/config';
 import { JwtService } from '@nestjs/jwt';
 import { InjectModel } from '@nestjs/mongoose';
-import { jwtToAddress } from '@mysten/zklogin';
 import { LoginUserDto } from './dtos/LoginUserDto';
 import { CreateUserDto } from './dtos/CreateUserDto';
 import { UserDocument, Users } from 'src/models/users.model';
@@ -28,37 +27,37 @@ export class AuthService {
   }
 
   async createUser(createUserDto: CreateUserDto) {
-    const { email, password, fullname, username, phone, nonce } = createUserDto;
+    const {
+      email,
+      password,
+      fullname,
+      username,
+      phone,
+      walletAddress,
+      addressSecretKey,
+    } = createUserDto;
 
     if (await this.userModel.findOne({ email })) {
       throw new ConflictException('You already have an account');
     }
 
-    const userSalt = this.generateSalt();
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const createUserData = {
       email,
       fullname,
       username,
-      walletAddress: '',
+      walletAddress,
+      addressSecretKey,
       password: hashedPassword,
       phone: phone ? phone : '',
     };
 
     const user = await this.userModel.create(createUserData);
-    const token = await this.signForJwtAddress(user, nonce);
-
-    const zkLoginUserAddress = jwtToAddress(token, userSalt);
-
-    await this.userModel.updateOne(
-      { email },
-      { walletAddress: zkLoginUserAddress },
-    );
 
     return {
       id: user._id,
-      address: zkLoginUserAddress,
+      address: user.walletAddress,
     };
   }
 
@@ -80,9 +79,19 @@ export class AuthService {
     }
 
     const token = await this.signForLogin(user);
-    const { fullname, username, walletAddress, phone } = user;
+    const { fullname, username, walletAddress, phone, addressSecretKey } = user;
 
-    return { token, user: { email, fullname, username, walletAddress, phone } };
+    return {
+      token,
+      user: {
+        email,
+        phone,
+        fullname,
+        username,
+        walletAddress,
+        addressSecretKey,
+      },
+    };
   }
 
   async connectWalletAuthenticate(walletAddress: string) {
@@ -133,6 +142,7 @@ export class AuthService {
       id: user._id,
       email: user.email,
       walletAddress: user.walletAddress,
+      secretKey: user.addressSecretKey,
       iat: Math.floor(Date.now() / 1000),
       jti: crypto.randomBytes(16).toString('hex'),
     };

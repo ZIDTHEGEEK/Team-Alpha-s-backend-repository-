@@ -16,9 +16,12 @@ export class CreateUserDto {
   phone: string;
 
   @IsString()
-  nonce: string;
-
-  @IsString()
   @MinLength(6)
   password: string;
+
+  @IsString()
+  walletAddress: string;
+
+  @IsString()
+  addressSecretKey: string;
 }

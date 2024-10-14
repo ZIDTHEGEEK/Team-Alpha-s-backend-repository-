@@ -29,6 +29,9 @@ export class Users {
 
   @Prop({ required: false })
   password: string;
+
+  @Prop({ required: false })
+  addressSecretKey: string;
 }
 
 export const UserModel = SchemaFactory.createForClass(Users);
