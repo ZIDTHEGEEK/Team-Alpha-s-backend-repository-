@@ -39,13 +39,10 @@ export class UsersService {
     );
   }
 
-  async getUserWalletAddressByEmail(email: string) {
-    const user = await this.userModel
-      .findOne({ email })
-      .select('walletAddress');
+  async getUserByEmail(email: string) {
+    const user = await this.userModel.findOne({ email });
+    if (!user) throw new NotFoundException('Not found');
 
-    if (!user) throw new NotFoundException();
-
-    return user.walletAddress;
+    return user;
   }
 }
