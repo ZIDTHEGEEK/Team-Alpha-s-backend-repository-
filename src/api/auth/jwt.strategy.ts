@@ -20,7 +20,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
   async validate(payload: any) {
     const { id } = payload;
-    console.log(payload);
     const user = await this.userModel.findById(id).select('-password');
 
     if (!user) throw new UnauthorizedException('Login required');
