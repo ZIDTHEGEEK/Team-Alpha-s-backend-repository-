@@ -15,9 +15,7 @@ export class UsersService {
   ) {}
 
   async getActiveUser(userId: string) {
-    const user = await this.userModel
-      .findById(userId)
-      .select('-password -nonce -userSalt');
+    const user = await this.userModel.findById(userId).select('-password');
     if (!user) throw new NotFoundException('User not found');
 
     return user;
